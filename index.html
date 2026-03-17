@@ -2,8 +2,8 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechNews - Inovação e Tecnologia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TechNews - Inovação e Design</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -11,95 +11,150 @@
 
     <style>
         :root { 
-            --wa-green: #075E54; --wa-bg: #f0f2f5; 
-            --accent: #00ff41; --dark: #121212;
+            --bg-dark: #0f1115; --bg-panel: #1a1d24; --accent: #00ff88; --text-main: #ffffff; --text-muted: #8b92a5;
+            --msg-in: #222732; --msg-out: #005c4b;
         }
         
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--wa-bg); overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body, html { height: 100%; background: #f4f4f4; overflow: hidden; }
         .hidden { display: none !important; }
 
-        /* PORTAL */
-        header.portal-header { background: #fff; padding: 15px 25px; border-bottom: 3px solid #0056b3; display: flex; justify-content: space-between; align-items: center; }
-        #search-trigger { padding: 8px 15px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
+        /* --- 1. DISFARCE (TECH NEWS) --- */
+        #news-portal { height: 100%; background: #fff; }
+        .portal-header { background: #111; color: #fff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .search-bar { background: #222; border: none; color: #fff; padding: 10px 15px; border-radius: 20px; outline: none; transition: 0.3s; width: 200px; }
+        .search-bar:focus { width: 250px; background: #333; }
+        .news-grid { padding: 20px; max-width: 800px; margin: 0 auto; display: grid; gap: 20px; }
+        .news-card { background: #f9f9f9; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 4px solid #111; }
 
-        /* PERFIL */
-        #profile-setup { position: fixed; inset: 0; background: var(--dark); color: white; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .profile-card { background: #1e1e1e; padding: 30px; border-radius: 20px; text-align: center; width: 320px; }
-        .av-circle { width: 45px; height: 45px; border-radius: 50%; background: #2a2a2a; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; margin: 5px; border: 2px solid transparent; }
-        .av-circle.active { border-color: var(--accent); }
-        .input-profile { background: #2a2a2a; border: none; padding: 12px; color: white; border-radius: 10px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
+        /* --- 2. MODAL DE ACESSO --- */
+        .glass-modal { position: fixed; inset: 0; background: rgba(15, 17, 21, 0.95); backdrop-filter: blur(10px); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .auth-card { background: var(--bg-panel); padding: 40px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
+        .auth-title { color: var(--text-main); font-size: 18px; margin-bottom: 25px; letter-spacing: 2px; }
+        .input-pro { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); padding: 15px; border-radius: 12px; width: 100%; margin-bottom: 15px; outline: none; transition: 0.3s; }
+        .input-pro:focus { border-color: var(--accent); }
+        .btn-pro { background: var(--accent); color: #000; font-weight: 600; border: none; padding: 15px; width: 100%; border-radius: 12px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .btn-pro:active { transform: scale(0.98); }
 
-        /* MENU DE CONVERSAS */
-        #chat-menu { position: fixed; inset: 0; background: #fff; z-index: 9998; display: flex; flex-direction: column; }
-        .menu-header { background: var(--wa-green); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .chat-list { flex: 1; overflow-y: auto; }
-        .chat-item { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 15px; cursor: pointer; }
-        .chat-item-icon { width: 50px; height: 50px; background: #ece5dd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        /* --- 3. APP PRINCIPAL (INTERFACE PRO) --- */
+        #alpha-os { position: fixed; inset: 0; background: var(--bg-dark); color: var(--text-main); z-index: 10000; display: flex; }
         
-        /* BOTÃO FLUTUANTE */
-        .fab { position: fixed; bottom: 30px; right: 30px; background: #25D366; color: white; border: none; width: 60px; height: 60px; border-radius: 50%; font-size: 30px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        /* PAINEL LATERAL (LISTA DE CHATS) */
+        .sidebar { width: 350px; background: var(--bg-panel); border-right: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .my-profile-badge { display: flex; align-items: center; gap: 10px; }
+        .avatar-sm { width: 40px; height: 40px; border-radius: 50%; background: #333; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .chat-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .contact-item { padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; margin-bottom: 5px; }
+        .contact-item:hover { background: rgba(255,255,255,0.05); }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted); display: inline-block; }
+        .status-dot.online { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
 
-        /* CHAT AREA */
-        #chat-app { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; background: #e5ddd5; }
-        .chat-nav { background: var(--wa-green); color: white; padding: 10px 15px; display: flex; align-items: center; gap: 10px; }
-        #messages-flow { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
-        .bubble { padding: 8px 12px; border-radius: 8px; max-width: 75%; font-size: 14.5px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-        .sent { align-self: flex-end; background: #dcf8c6; }
-        .received { align-self: flex-start; background: #fff; }
-        footer { background: #f0f0f0; padding: 10px; display: flex; gap: 10px; }
-        #msg-input { flex: 1; border: none; padding: 12px; border-radius: 25px; outline: none; }
+        /* ÁREA DE CONVERSA */
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-dark); position: relative; }
+        .chat-header { padding: 15px 25px; background: rgba(26, 29, 36, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .chat-header-info { display: flex; align-items: center; gap: 15px; }
+        
+        #messages-container { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 12px; }
+        .msg-bubble { max-width: 65%; padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.4; position: relative; word-wrap: break-word; }
+        .msg-bubble.out { align-self: flex-end; background: var(--msg-out); border-bottom-right-radius: 4px; }
+        .msg-bubble.in { align-self: flex-start; background: var(--msg-in); border-bottom-left-radius: 4px; }
+        .msg-meta { font-size: 11px; color: rgba(255,255,255,0.5); text-align: right; margin-top: 5px; display: block; }
+        .msg-image { max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer; }
+
+        /* BARRA DE ENTRADA */
+        .input-area { padding: 15px 25px; background: var(--bg-panel); display: flex; gap: 15px; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); }
+        .btn-icon { background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; transition: 0.2s; padding: 5px; }
+        .btn-icon:hover { color: var(--accent); }
+        .msg-input { flex: 1; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 15px 20px; border-radius: 25px; color: #fff; font-size: 15px; outline: none; }
+        
+        .timer-active { color: #ff4757 !important; }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; position: absolute; height: 100%; z-index: 20; transition: 0.3s transform; }
+            .sidebar.chat-open { transform: translateX(-100%); }
+            .chat-area { width: 100%; height: 100%; }
+        }
     </style>
 </head>
 <body>
 
     <div id="news-portal">
         <header class="portal-header">
-            <div style="color:#0056b3; font-weight:bold;">Alpha 7 Tech</div>
-            <input type="text" id="search-trigger" placeholder="Buscar no portal...">
+            <h2>Alpha Tech</h2>
+            <input type="text" id="master-trigger" class="search-bar" placeholder="Pesquisar artigos..." autocomplete="off">
         </header>
-        <div style="padding: 20px; max-width: 600px; margin: auto; opacity: 0.5;">
-            <h3>Destaques de hoje</h3>
-            <div style="background:#fff; height:100px; margin-bottom:10px;"></div>
-            <div style="background:#fff; height:100px;"></div>
-        </div>
-    </div>
-
-    <div id="profile-setup" class="hidden">
-        <div class="profile-card">
-            <div id="setup-av-view" style="font-size: 50px; margin-bottom: 15px;">👤</div>
-            <div class="avatar-options">
-                <span class="av-circle active" data-icon="👤">👤</span>
-                <span class="av-circle" data-icon="🦊">🦊</span>
-                <span class="av-circle" data-icon="🕵️">🕵️</span>
-                <span class="av-circle" data-icon="🤖">🤖</span>
+        <div class="news-grid">
+            <div class="news-card">
+                <h3>O futuro da Criptografia Quântica</h3>
+                <p>Pesquisadores avançam em novos métodos de segurança de dados em nuvem, garantindo privacidade ponta a ponta...</p>
             </div>
-            <input type="text" id="user-nick" class="input-profile" placeholder="Seu apelido...">
-            <button onclick="finalizeSetup()" style="background:var(--accent); border:none; padding:12px; width:100%; border-radius:10px; cursor:pointer; font-weight:bold;">CADASTRAR</button>
         </div>
     </div>
 
-    <div id="chat-menu" class="hidden">
-        <div class="menu-header">
-            <span>Minhas Conversas</span>
-            <small id="user-display-id" style="font-size: 10px; opacity: 0.7;"></small>
+    <div id="auth-modal" class="glass-modal hidden">
+        <div class="auth-card">
+            <div class="auth-title">IDENTIFICAÇÃO DE NÓ</div>
+            <input type="password" id="access-key" class="input-pro" placeholder="Chave de Acesso (Senha)" autocomplete="new-password">
+            <button class="btn-pro" onclick="authenticate()">DESBLOQUEAR TÚNEL</button>
         </div>
-        <div class="chat-list" id="chat-list-container"></div>
-        <button class="fab" onclick="promptRoomKey()">+</button>
     </div>
 
-    <div id="chat-app" class="hidden">
-        <div class="chat-nav">
-            <span style="cursor:pointer;" onclick="closeChat()">←</span>
-            <div id="active-room-name" style="font-weight:bold;">Sala</div>
+    <div id="setup-modal" class="glass-modal hidden">
+        <div class="auth-card">
+            <div class="auth-title">CRIAR IDENTIDADE</div>
+            <input type="text" id="reg-id" class="input-pro" placeholder="ID de Usuário (Ex: agente.01)">
+            <input type="text" id="reg-nick" class="input-pro" placeholder="Nome de Exibição">
+            <button class="btn-pro" onclick="registerUser()">INICIALIZAR</button>
         </div>
-        <div id="messages-flow"></div>
-        <footer>
-            <input type="text" id="msg-input" placeholder="Mensagem...">
-            <button onclick="sendMsg()" style="border:none; background:none; font-size:24px; cursor:pointer;">➤</button>
-        </footer>
+    </div>
+
+    <div id="alpha-os" class="hidden">
+        
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="my-profile-badge">
+                    <div class="avatar-sm" id="my-av">👤</div>
+                    <div>
+                        <div style="font-weight:600; font-size:15px;" id="my-name">Carregando...</div>
+                        <div style="font-size:12px; color:var(--text-muted);" id="my-uid"></div>
+                    </div>
+                </div>
+                <button class="btn-icon" onclick="promptAddContact()">➕</button>
+            </div>
+            <div class="chat-list" id="contacts-list"></div>
+        </div>
+
+        <div class="chat-area" id="chat-area">
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <button class="btn-icon" onclick="closeChatMobile()" id="btn-back" style="display:none;">←</button>
+                    <div class="avatar-sm" id="active-av">?</div>
+                    <div>
+                        <div style="font-weight:600; font-size:16px;" id="active-name">Selecione um chat</div>
+                        <div style="font-size:12px; color:var(--text-muted);" id="active-status">Aguardando...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="messages-container">
+                <div style="text-align:center; color:var(--text-muted); margin-top:50px;">
+                    Túnel Criptografado Ponta-a-Ponta estabelecido.<br>A conexão é segura.
+                </div>
+            </div>
+
+            <div class="input-area" id="input-area" style="opacity:0.5; pointer-events:none;">
+                <button class="btn-icon" id="btn-timer" onclick="toggleTimer()" title="Autodestruição">⏱️</button>
+                <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                <button class="btn-icon" onclick="document.getElementById('file-input').click()" title="Enviar Imagem">📎</button>
+                <input type="text" class="msg-input" id="msg-input" placeholder="Mensagem secreta..." autocomplete="off">
+                <button class="btn-icon" style="color:var(--accent);" onclick="sendMsg()">➤</button>
+            </div>
+        </div>
     </div>
 
     <script>
+        // CONFIGURAÇÕES FIREBASE (Mantenha as suas originais)
         const firebaseConfig = {
             apiKey: "AIzaSyDpDQ1QP1rpud61JzG5oO_EIQZg_imG7fE",
             authDomain: "alpha-7-2aefe.firebaseapp.com",
@@ -109,141 +164,257 @@
             messagingSenderId: "732540803197",
             appId: "1:732540803197:web:c459e86c800a4f960ff914"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let MASTER_KEY = "";
-        let USER_DATA = { icon: "👤", name: "" };
-        let ACTIVE_ROOM_ID = "";
+        // ESTADO GLOBAL
+        let MASTER_KEY = "", ACCESS_KEY = "", MY_DATA = null, ACTIVE_CHAT = null;
+        let selfDestructTimer = 0; // 0 = desligado
 
-        // LOGIN
-        document.getElementById('search-trigger').onkeypress = function(e) {
-            if(e.key === 'Enter') {
+        // 1. INTERCEPTADOR DE BUSCA (GATILHO)
+        document.getElementById('master-trigger').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && e.target.value.length >= 3) {
                 MASTER_KEY = e.target.value;
-                if(MASTER_KEY.length < 3) return;
-                
-                db.ref('alpha7/users/' + MASTER_KEY).once('value', snap => {
-                    if(snap.exists()) {
-                        USER_DATA = snap.val();
-                        openMenu();
-                    } else {
-                        document.getElementById('news-portal').classList.add('hidden');
-                        document.getElementById('profile-setup').classList.remove('hidden');
-                    }
-                });
+                document.getElementById('news-portal').classList.add('hidden');
+                document.getElementById('auth-modal').classList.remove('hidden');
+                document.getElementById('access-key').focus();
             }
-        };
-
-        // SETUP PERFIL
-        document.querySelectorAll('.av-circle').forEach(el => {
-            el.onclick = () => {
-                document.querySelectorAll('.av-circle').forEach(a => a.classList.remove('active'));
-                el.classList.add('active');
-                USER_DATA.icon = el.dataset.icon;
-                document.getElementById('setup-av-view').innerText = USER_DATA.icon;
-            };
         });
 
-        function finalizeSetup() {
-            USER_DATA.name = document.getElementById('user-nick').value;
-            if(!USER_DATA.name) return;
-            db.ref('alpha7/users/' + MASTER_KEY).set(USER_DATA);
-            openMenu();
-        }
+        // 2. AUTENTICAÇÃO E CADASTRO
+        function authenticate() {
+            ACCESS_KEY = document.getElementById('access-key').value;
+            if(!ACCESS_KEY) return;
 
-        // GESTÃO DE CHAVES DE CONVERSA
-        function openMenu() {
-            document.getElementById('news-portal').classList.add('hidden');
-            document.getElementById('profile-setup').classList.add('hidden');
-            document.getElementById('chat-menu').classList.remove('hidden');
-            document.getElementById('user-display-id').innerText = "Sua ID: " + MASTER_KEY;
-            refreshRooms();
-        }
-
-        function promptRoomKey() {
-            const roomKey = prompt("Insira a CHAVE da conversa (Ex: SALA-123):");
-            if(!roomKey) return;
-            
-            // Vincula esta chave à sua MASTER_KEY no Firebase
-            db.ref('alpha7/user_rooms/' + MASTER_KEY + '/' + roomKey).set(true);
-            refreshRooms();
-        }
-
-        function refreshRooms() {
-            const container = document.getElementById('chat-list-container');
-            container.innerHTML = "";
-            
-            db.ref('alpha7/user_rooms/' + MASTER_KEY).once('value', snap => {
-                if(!snap.exists()) {
-                    container.innerHTML = "<p style='text-align:center; padding:20px; color:#999;'>Sem conversas vinculadas.</p>";
-                    return;
+            db.ref(`alpha7_pro/vaults/${MASTER_KEY}/${ACCESS_KEY}`).once('value', snap => {
+                if (snap.exists()) {
+                    MY_DATA = snap.val();
+                    launchAlphaOS();
+                } else {
+                    document.getElementById('auth-modal').classList.add('hidden');
+                    document.getElementById('setup-modal').classList.remove('hidden');
                 }
+            });
+        }
+
+        function registerUser() {
+            const uid = document.getElementById('reg-id').value.toLowerCase().trim();
+            const nick = document.getElementById('reg-nick').value.trim();
+            if(!uid || !nick) return alert("Preencha todos os campos.");
+
+            db.ref(`alpha7_pro/directory/${uid}`).once('value', snap => {
+                if(snap.exists()) return alert("ID indisponível.");
+                
+                MY_DATA = { uid, nick, avatar: "👤" };
+                db.ref(`alpha7_pro/vaults/${MASTER_KEY}/${ACCESS_KEY}`).set(MY_DATA);
+                db.ref(`alpha7_pro/directory/${uid}`).set({ nick }); // Diretório público (só nomes, sem chaves)
+                launchAlphaOS();
+            });
+        }
+
+        // 3. INICIALIZAR SISTEMA
+        function launchAlphaOS() {
+            document.querySelectorAll('.glass-modal').forEach(m => m.classList.add('hidden'));
+            document.getElementById('alpha-os').classList.remove('hidden');
+            
+            document.getElementById('my-name').innerText = MY_DATA.nick;
+            document.getElementById('my-uid').innerText = "@" + MY_DATA.uid;
+
+            setupPresence();
+            loadContacts();
+            
+            if(window.innerWidth <= 768) document.getElementById('btn-back').style.display = "block";
+        }
+
+        // 4. SISTEMA DE PRESENÇA (ONLINE/OFFLINE)
+        function setupPresence() {
+            const myConnectionsRef = db.ref(`alpha7_pro/presence/${MY_DATA.uid}/online`);
+            const lastOnlineRef = db.ref(`alpha7_pro/presence/${MY_DATA.uid}/last_seen`);
+            
+            db.ref('.info/connected').on('value', snap => {
+                if (snap.val() === true) {
+                    myConnectionsRef.onDisconnect().set(false);
+                    lastOnlineRef.onDisconnect().set(firebase.database.ServerValue.TIMESTAMP);
+                    myConnectionsRef.set(true);
+                }
+            });
+        }
+
+        // 5. GERENCIAR CONTATOS
+        function promptAddContact() {
+            const targetUid = prompt("Digite o @ID do usuário para conectar:");
+            if(!targetUid || targetUid === MY_DATA.uid) return;
+
+            db.ref(`alpha7_pro/directory/${targetUid}`).once('value', snap => {
+                if(!snap.exists()) return alert("Usuário não encontrado.");
+                const contactData = snap.val();
+                
+                // Adiciona contato na lista local do usuário
+                db.ref(`alpha7_pro/contacts/${MY_DATA.uid}/${targetUid}`).set({ nick: contactData.nick });
+                loadContacts();
+            });
+        }
+
+        function loadContacts() {
+            db.ref(`alpha7_pro/contacts/${MY_DATA.uid}`).on('value', snap => {
+                const list = document.getElementById('contacts-list');
+                list.innerHTML = "";
+                if(!snap.exists()) return;
+
                 snap.forEach(child => {
-                    const roomId = child.key;
+                    const cUid = child.key;
+                    const cNick = child.val().nick;
+                    
                     const div = document.createElement('div');
-                    div.className = 'chat-item';
-                    div.onclick = () => loadChat(roomId);
+                    div.className = 'contact-item';
+                    div.onclick = () => openChat(cUid, cNick);
+                    
+                    // Estrutura do contato com indicador de status
                     div.innerHTML = `
-                        <div class="chat-item-icon">🔑</div>
-                        <div><strong>Chave: ${roomId}</strong><br><small>Toque para entrar no túnel</small></div>
+                        <div class="avatar-sm">👤</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:600; color:#fff;">${cNick}</div>
+                            <div style="font-size:11px; color:var(--text-muted);">@${cUid}</div>
+                        </div>
+                        <div class="status-dot" id="status-dot-${cUid}"></div>
                     `;
-                    container.appendChild(div);
+                    list.appendChild(div);
+
+                    // Escuta status deste contato
+                    db.ref(`alpha7_pro/presence/${cUid}/online`).on('value', s => {
+                        const dot = document.getElementById(`status-dot-${cUid}`);
+                        if(dot) {
+                            if(s.val() === true) dot.classList.add('online');
+                            else dot.classList.remove('online');
+                        }
+                    });
                 });
             });
         }
 
-        // CHAT REAL-TIME
-        function loadChat(roomId) {
-            ACTIVE_ROOM_ID = roomId;
-            document.getElementById('chat-menu').classList.add('hidden');
-            document.getElementById('chat-app').classList.remove('hidden');
-            document.getElementById('active-room-name').innerText = "Túnel: " + roomId;
-            document.getElementById('messages-flow').innerHTML = "";
+        // 6. CHAT E CRIPTOGRAFIA
+        function openChat(targetUid, targetNick) {
+            ACTIVE_CHAT = [MY_DATA.uid, targetUid].sort().join("_");
             
-            db.ref('alpha7/messages/' + ACTIVE_ROOM_ID).off();
-            listenMessages();
-        }
+            document.getElementById('active-name').innerText = targetNick;
+            document.getElementById('input-area').style.opacity = "1";
+            document.getElementById('input-area').style.pointerEvents = "auto";
+            document.getElementById('messages-container').innerHTML = "";
+            
+            if(window.innerWidth <= 768) document.getElementById('sidebar').classList.add('chat-open');
 
-        function listenMessages() {
-            db.ref('alpha7/messages/' + ACTIVE_ROOM_ID).on('child_added', snap => {
+            // Escuta status online do alvo
+            db.ref(`alpha7_pro/presence/${targetUid}/online`).on('value', snap => {
+                document.getElementById('active-status').innerText = snap.val() ? "Online" : "Offline";
+                document.getElementById('active-status').style.color = snap.val() ? "var(--accent)" : "var(--text-muted)";
+            });
+
+            // Carrega mensagens
+            db.ref(`alpha7_pro/messages/${ACTIVE_CHAT}`).off();
+            db.ref(`alpha7_pro/messages/${ACTIVE_CHAT}`).on('child_added', snap => {
                 try {
-                    const bytes = CryptoJS.AES.decrypt(snap.val(), ACTIVE_ROOM_ID); // Usa a própria chave da sala para criptografar
+                    const msgKey = snap.key;
+                    const bytes = CryptoJS.AES.decrypt(snap.val(), ACCESS_KEY + MASTER_KEY);
                     const dec = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-                    renderBubble(dec);
-                } catch(e) { }
+                    
+                    // Checagem de autodestruição
+                    if (dec.expires && Date.now() > dec.expires) {
+                        db.ref(`alpha7_pro/messages/${ACTIVE_CHAT}/${msgKey}`).remove();
+                        return; // Não renderiza se já expirou
+                    }
+                    renderMsg(dec);
+                } catch(e) {}
             });
         }
 
-        function sendMsg() {
-            const inp = document.getElementById('msg-input');
-            if(!inp.value) return;
+        // 7. ENVIO DE MENSAGENS E IMAGENS
+        function toggleTimer() {
+            const btn = document.getElementById('btn-timer');
+            if(selfDestructTimer === 0) {
+                selfDestructTimer = 60000; // 1 minuto
+                btn.classList.add('timer-active');
+            } else {
+                selfDestructTimer = 0;
+                btn.classList.remove('timer-active');
+            }
+        }
 
-            const data = { sender: USER_DATA.name, icon: USER_DATA.icon, text: inp.value };
-            // Criptografamos usando a chave da sala como senha
-            const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), ACTIVE_ROOM_ID).toString();
+        function sendMsg(text = null, imgBase64 = null) {
+            if(!ACTIVE_CHAT) return;
+            const inp = document.getElementById('msg-input');
+            const msgText = text || inp.value.trim();
+            if(!msgText && !imgBase64) return;
+
+            const payload = { 
+                sender: MY_DATA.uid, 
+                text: msgText, 
+                img: imgBase64,
+                time: Date.now() 
+            };
             
-            db.ref('alpha7/messages/' + ACTIVE_ROOM_ID).push(encrypted);
+            if(selfDestructTimer > 0) payload.expires = Date.now() + selfDestructTimer;
+
+            const encrypted = CryptoJS.AES.encrypt(JSON.stringify(payload), ACCESS_KEY + MASTER_KEY).toString();
+            db.ref(`alpha7_pro/messages/${ACTIVE_CHAT}`).push(encrypted);
             inp.value = "";
         }
 
-        function renderBubble(data) {
-            const flow = document.getElementById('messages-flow');
-            const type = (data.sender === USER_DATA.name) ? 'sent' : 'received';
-            const div = document.createElement('div');
-            div.className = `bubble ${type}`;
-            div.innerHTML = `<small style="color:var(--wa-green); font-weight:bold">${data.icon} ${data.sender}</small><br>${data.text}`;
-            flow.appendChild(div);
-            flow.scrollTop = flow.scrollHeight;
-        }
-
-        function closeChat() {
-            document.getElementById('chat-app').classList.add('hidden');
-            document.getElementById('chat-menu').classList.remove('hidden');
-            db.ref('alpha7/messages/' + ACTIVE_ROOM_ID).off();
-        }
-
         document.getElementById('msg-input').onkeypress = (e) => { if(e.key === 'Enter') sendMsg(); };
+
+        // Processador de Imagem (Comprime antes de criptografar)
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    // Redimensiona para não estourar limite do Firebase
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    const base64Str = canvas.toDataURL('image/jpeg', 0.6); // 60% qualidade
+                    sendMsg(null, base64Str);
+                }
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Renderização da Interface de Chat
+        function renderMsg(data) {
+            const container = document.getElementById('messages-container');
+            const type = (data.sender === MY_DATA.uid) ? 'out' : 'in';
+            const timeStr = new Date(data.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            const div = document.createElement('div');
+            div.className = `msg-bubble ${type}`;
+            
+            let content = "";
+            if (data.img) content += `<img src="${data.img}" class="msg-image" onclick="window.open('${data.img}')">`;
+            if (data.text) content += `<div>${data.text}</div>`;
+            
+            let metaExtra = data.expires ? " ⏱️" : "";
+            content += `<span class="msg-meta">${timeStr}${metaExtra}</span>`;
+            
+            div.innerHTML = content;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function closeChatMobile() {
+            document.getElementById('sidebar').classList.remove('chat-open');
+            ACTIVE_CHAT = null;
+        }
+
+        // PÂNICO
         window.onkeydown = (e) => { if(e.key === "Escape") location.reload(); };
     </script>
 </body>
