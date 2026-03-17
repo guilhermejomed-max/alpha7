@@ -209,6 +209,7 @@
 
         let ACCOUNT_KEY = "", MY_DATA = null, ACTIVE_CHAT = null;
         let loginTime = 0;
+        let activeChatListener = null; // Variável para controlar os ouvintes sem matar as notificações
 
         // --- SISTEMA DE GESTOS MOBILE (SWIPE TO GO BACK) ---
         let touchstartX = 0;
@@ -289,8 +290,13 @@
         }
 
         function addContact() {
-            const targetId = prompt("ID Público do contato:");
-            if(!targetId || targetId === MY_DATA.pubId) return;
+            let targetId = prompt("ID Público do contato:");
+            if(!targetId) return;
+            
+            // CORREÇÃO: Forçar minúsculas para evitar erro de criptografia nas chaves
+            targetId = targetId.toLowerCase().trim().replace(/\s/g, '');
+            
+            if(targetId === MY_DATA.pubId) return;
             db.ref(`alpha7_v2/directory/${targetId}`).once('value', snap => {
                 if(!snap.exists()) return alert("Usuário não encontrado.");
                 db.ref(`alpha7_v2/contacts/${MY_DATA.pubId}/${targetId}`).set({ nick: snap.val().nick });
@@ -326,7 +332,6 @@
                     const chatId = [MY_DATA.pubId, cId].sort().join("_");
                     db.ref(`alpha7_v2/messages/${chatId}`).on('child_added', msgSnap => {
                         try {
-                            // CORREÇÃO: Destranca notificação apenas com a chave da sala (chatId)
                             const bytes = CryptoJS.AES.decrypt(msgSnap.val(), chatId);
                             const dec = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
                             if (dec.time > loginTime && dec.sender !== MY_DATA.pubId && document.hidden) {
@@ -350,7 +355,14 @@
         }
 
         function openChat(targetId, targetNick) {
-            ACTIVE_CHAT = [MY_DATA.pubId, targetId].sort().join("_");
+            const novoChatId = [MY_DATA.pubId, targetId].sort().join("_");
+
+            // CORREÇÃO: Limpa o ouvinte anterior apenas na tela, para não quebrar notificações globais
+            if (ACTIVE_CHAT && activeChatListener) {
+                db.ref(`alpha7_v2/messages/${ACTIVE_CHAT}`).off('child_added', activeChatListener);
+            }
+
+            ACTIVE_CHAT = novoChatId;
             document.getElementById('active-name').innerText = targetNick;
             document.getElementById('active-status').innerText = "@" + targetId;
             document.getElementById('input-area').style.opacity = "1";
@@ -358,14 +370,15 @@
             document.getElementById('messages-container').innerHTML = "";
             if(window.innerWidth <= 768) document.getElementById('sidebar').classList.add('chat-open');
 
-            db.ref(`alpha7_v2/messages/${ACTIVE_CHAT}`).off();
-            db.ref(`alpha7_v2/messages/${ACTIVE_CHAT}`).on('child_added', snap => {
+            // CORREÇÃO: Ativa o novo ouvinte que alimentará as mensagens na tela em tempo real
+            activeChatListener = db.ref(`alpha7_v2/messages/${ACTIVE_CHAT}`).on('child_added', snap => {
                 try {
-                    // CORREÇÃO: Destranca as mensagens apenas com a chave da sala (ACTIVE_CHAT)
                     const bytes = CryptoJS.AES.decrypt(snap.val(), ACTIVE_CHAT);
                     const dec = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
                     renderMsg(dec);
-                } catch(e) {}
+                } catch(e) {
+                    console.error("Erro ao descriptografar mensagem, chaves podem ser diferentes", e);
+                }
             });
         }
 
@@ -379,7 +392,6 @@
 
             const payload = { sender: MY_DATA.pubId, text: text, time: Date.now() };
             
-            // CORREÇÃO: Tranca as mensagens apenas com a chave da sala (ACTIVE_CHAT)
             const encrypted = CryptoJS.AES.encrypt(JSON.stringify(payload), ACTIVE_CHAT).toString();
             db.ref(`alpha7_v2/messages/${ACTIVE_CHAT}`).push(encrypted);
             inp.value = "";
