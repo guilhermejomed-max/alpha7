@@ -61,7 +61,6 @@
         /* --- BASE RESET & MOBILE FIXES --- */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; transition: background 0.3s, color 0.3s, border-color 0.3s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
         
-        /* 100dvh garante que o teclado não quebre o layout no celular */
         body, html { height: 100dvh; background: var(--bg-dark); color: var(--text-main); overflow: hidden; overscroll-behavior-y: none; }
         .hidden { display: none !important; }
 
@@ -101,7 +100,6 @@
         .msg-bubble.in { align-self: flex-start; background: var(--os-msg-in); color: var(--os-msg-text-in); border: var(--os-in-border); border-bottom-left-radius: 2px; }
         .msg-meta { font-size: 10px; opacity: 0.6; display: block; margin-top: 4px; text-align: right; }
         
-        /* Otimização da barra de digitação para teclados mobile */
         .input-area { padding: 12px 15px calc(12px + env(safe-area-inset-bottom)); background: var(--os-panel); display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--os-border); z-index: 10; }
         .msg-input { flex: 1; background: var(--os-bg); border: 1px solid var(--os-border); padding: 12px 18px; border-radius: 25px; color: var(--os-text); font-size: 16px; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
         .btn-icon { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--os-text-mut); display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 50%; }
@@ -220,7 +218,6 @@
         chatAreaNode.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; }, {passive: true});
         chatAreaNode.addEventListener('touchend', e => {
             touchendX = e.changedTouches[0].screenX;
-            // Se deslizou mais de 100px para a direita no mobile, volta pra tela de contatos
             if (touchendX - touchstartX > 100 && window.innerWidth <= 768) closeChatMobile();
         }, {passive: true});
 
@@ -245,6 +242,9 @@
                 else { document.getElementById('login-screen').classList.add('hidden'); document.getElementById('setup-screen').classList.remove('hidden'); }
             });
         }
+        document.getElementById('account-key').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') verifyLogin();
+        });
 
         function createAccount() {
             const nick = document.getElementById('reg-nick').value.trim();
@@ -326,11 +326,12 @@
                     const chatId = [MY_DATA.pubId, cId].sort().join("_");
                     db.ref(`alpha7_v2/messages/${chatId}`).on('child_added', msgSnap => {
                         try {
-                            const bytes = CryptoJS.AES.decrypt(msgSnap.val(), ACCOUNT_KEY + chatId);
+                            // CORREÇÃO: Destranca notificação apenas com a chave da sala (chatId)
+                            const bytes = CryptoJS.AES.decrypt(msgSnap.val(), chatId);
                             const dec = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
                             if (dec.time > loginTime && dec.sender !== MY_DATA.pubId && document.hidden) {
                                 triggerThemeNotification();
-                                if(navigator.vibrate) navigator.vibrate(200); // Vibração mobile
+                                if(navigator.vibrate) navigator.vibrate(200);
                             }
                         } catch(e) {}
                     });
@@ -360,7 +361,8 @@
             db.ref(`alpha7_v2/messages/${ACTIVE_CHAT}`).off();
             db.ref(`alpha7_v2/messages/${ACTIVE_CHAT}`).on('child_added', snap => {
                 try {
-                    const bytes = CryptoJS.AES.decrypt(snap.val(), ACCOUNT_KEY + ACTIVE_CHAT);
+                    // CORREÇÃO: Destranca as mensagens apenas com a chave da sala (ACTIVE_CHAT)
+                    const bytes = CryptoJS.AES.decrypt(snap.val(), ACTIVE_CHAT);
                     const dec = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
                     renderMsg(dec);
                 } catch(e) {}
@@ -376,7 +378,9 @@
             if(text === "/destroy") { db.ref(`alpha7_v2/messages/${ACTIVE_CHAT}`).remove(); inp.value = ""; return; }
 
             const payload = { sender: MY_DATA.pubId, text: text, time: Date.now() };
-            const encrypted = CryptoJS.AES.encrypt(JSON.stringify(payload), ACCOUNT_KEY + ACTIVE_CHAT).toString();
+            
+            // CORREÇÃO: Tranca as mensagens apenas com a chave da sala (ACTIVE_CHAT)
+            const encrypted = CryptoJS.AES.encrypt(JSON.stringify(payload), ACTIVE_CHAT).toString();
             db.ref(`alpha7_v2/messages/${ACTIVE_CHAT}`).push(encrypted);
             inp.value = "";
         }
