@@ -284,6 +284,8 @@ async function scan() {
   }
 }
 
-$("#scanButton").addEventListener("click", scan);
-load();
-setInterval(load, 30_000);
+if (window.location.protocol !== "file:") {
+  $("#scanButton").addEventListener("click", scan);
+  load();
+  setInterval(load, 30_000);
+}

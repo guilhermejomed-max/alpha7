@@ -40,6 +40,51 @@ body {
   font-family: var(--sans);
 }
 
+.direct-open-warning {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(8, 11, 18, 0.96);
+  backdrop-filter: blur(16px);
+}
+
+.direct-open-warning[hidden] {
+  display: none;
+}
+
+.direct-open-warning > div {
+  width: min(620px, 100%);
+  padding: 34px;
+  border: 1px solid #2b3a50;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.55);
+}
+
+.direct-open-warning span {
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.direct-open-warning h2 {
+  margin: 14px 0;
+}
+
+.direct-open-warning p {
+  margin: 0;
+  color: var(--muted-2);
+  line-height: 1.7;
+}
+
+.direct-open-warning strong {
+  color: var(--cyan);
+}
+
 button {
   font: inherit;
 }

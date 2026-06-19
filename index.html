@@ -9,9 +9,19 @@
     />
     <meta name="theme-color" content="#080b12" />
     <title>MEXC Signal Radar</title>
-    <link rel="stylesheet" href="./styles.css?v=20260619-4" />
+    <link rel="stylesheet" href="./styles.css?v=20260619-5" />
   </head>
   <body>
+    <div id="directOpenWarning" class="direct-open-warning" hidden>
+      <div>
+        <span>INICIALIZAÇÃO NECESSÁRIA</span>
+        <h2>Não abra o index.html diretamente.</h2>
+        <p>
+          Feche esta aba e dê dois cliques em <strong>iniciar-radar.cmd</strong>.
+          Ele ligará o servidor e abrirá o endereço correto no seu navegador.
+        </p>
+      </div>
+    </div>
     <div class="noise" aria-hidden="true"></div>
 
     <header class="site-header">
@@ -226,6 +236,11 @@
     </footer>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="./app.js?v=20260619-4"></script>
+    <script>
+      if (window.location.protocol === "file:") {
+        document.getElementById("directOpenWarning").hidden = false;
+      }
+    </script>
+    <script type="module" src="./app.js?v=20260619-5"></script>
   </body>
 </html>

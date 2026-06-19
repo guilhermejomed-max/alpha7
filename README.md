@@ -43,6 +43,25 @@ candle em formação bloqueie artificialmente os sinais.
 
 ## Rodar
 
+### Windows: forma mais simples
+
+Dê dois cliques em:
+
+```text
+iniciar-radar.cmd
+```
+
+O iniciador liga o servidor e abre o navegador padrão automaticamente. Para
+encerrar, use `parar-radar.cmd`.
+
+Não abra `index.html` diretamente. O endereço correto é:
+
+```text
+http://127.0.0.1:8787/
+```
+
+### Terminal
+
 Requer Node.js 20 ou superior:
 
 ```powershell
@@ -57,7 +76,8 @@ Abra:
 http://localhost:8787
 ```
 
-Não existe chave para preencher.
+Não existe chave para preencher. O servidor local é necessário porque a MEXC
+bloqueia chamadas diretas feitas por páginas abertas como arquivo.
 
 ## Configuração
 
