@@ -16,6 +16,7 @@ const publicFiles = new Map([
 ]);
 const client = new MexcClient(config.mexc);
 const scanner = new SignalScanner(client);
+const appVersion = "2026.06.19.8";
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -47,6 +48,8 @@ async function api(request, response, url) {
   if (request.method === "GET" && url.pathname === "/api/health") {
     return sendJson(response, 200, {
       ok: true,
+      app: "mexc-signal-radar",
+      version: appVersion,
       keyRequired: false,
       time: new Date().toISOString()
     });
@@ -92,15 +95,40 @@ const server = http.createServer(async (request, response) => {
 
 server.listen(config.port, () => {
   console.log(`MEXC Signal Radar disponível em http://localhost:${config.port}`);
-  scanner.scan().catch((error) => console.error(`Scan inicial: ${error.message}`));
+  scanner
+    .scan({ force: true })
+    .catch((error) => console.error(`Scan inicial: ${error.message}`))
+    .finally(scheduleNextScan);
 });
 
-const timer = setInterval(
-  () => scanner.scan().catch((error) => console.error(`Scan automático: ${error.message}`)),
-  config.scanIntervalMs
-);
+const timeframeMilliseconds = {
+  Min1: 60_000,
+  Min5: 300_000,
+  Min15: 900_000,
+  Min30: 1_800_000,
+  Min60: 3_600_000,
+  Hour4: 14_400_000
+};
+let timer;
+
+function scheduleNextScan() {
+  if (timer) clearTimeout(timer);
+  const duration =
+    timeframeMilliseconds[config.market.timeframe] || config.scanIntervalMs;
+  const delay = duration - (Date.now() % duration) + 5_000;
+  scanner.state.nextScanAt = new Date(Date.now() + delay).toISOString();
+  timer = setTimeout(async () => {
+    try {
+      await scanner.scan({ force: true });
+    } catch (error) {
+      console.error(`Scan automático: ${error.message}`);
+    } finally {
+      scheduleNextScan();
+    }
+  }, delay);
+}
 
 process.on("SIGINT", () => {
-  clearInterval(timer);
+  clearTimeout(timer);
   server.close(() => process.exit(0));
 });

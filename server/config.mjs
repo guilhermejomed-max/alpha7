@@ -68,7 +68,7 @@ export const config = {
       "LINK_USDT",
       "AVAX_USDT"
     ]),
-    timeframe: process.env.TIMEFRAME || "Min15",
+    timeframe: process.env.TIMEFRAME || "Min5",
     higherTimeframe: process.env.HIGHER_TIMEFRAME || "Hour4",
     relativeStrengthTopN: number("RELATIVE_STRENGTH_TOP_N", 5),
     minTurnover: number("MIN_24H_TURNOVER_USDT", 5_000_000),

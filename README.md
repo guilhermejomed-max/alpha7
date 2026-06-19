@@ -41,6 +41,10 @@ O radar usa três estados:
 Os cálculos usam apenas candles fechados. Isso evita que o volume parcial do
 candle em formação bloqueie artificialmente os sinais.
 
+O padrão é `Min5`, portanto os indicadores podem mudar a cada fechamento de
+cinco minutos. O painel mostra uma contagem regressiva e executa a leitura
+automaticamente alguns segundos após cada fechamento.
+
 ## Rodar
 
 ### Windows: forma mais simples
@@ -85,7 +89,7 @@ As regras ficam no `.env`:
 
 ```env
 WATCHLIST=BTC_USDT,ETH_USDT,SOL_USDT
-TIMEFRAME=Min15
+TIMEFRAME=Min5
 HIGHER_TIMEFRAME=Hour4
 ADX_MIN=25
 ATR_STOP_MULTIPLIER=2
@@ -107,13 +111,11 @@ NEWS_BLACKOUTS_JSON=[{"title":"FOMC","start":"2026-06-19T17:45:00Z","end":"2026-
 Sem um calendário integrado, o painel lembra que notícias devem ser confirmadas
 manualmente antes de executar o sinal.
 
-## Publicar
+## Publicar no GitHub Pages
 
-O projeto precisa de um ambiente Node.js porque o navegador não deve chamar a
-MEXC diretamente em todas as instalações. Pode ser hospedado em Render, Railway,
-Fly.io, Cloud Run ou outro serviço Node.
-
-GitHub Pages sozinho hospeda apenas arquivos estáticos e não executa o scanner.
+O workflow `.github/workflows/pages.yml` consulta a MEXC, gera `signals.json` e
+publica o painel. Ele repete a leitura a cada cinco minutos, sem depender da sua
+máquina e sem chave API.
 
 ```bash
 git init
@@ -123,6 +125,22 @@ git branch -M main
 git remote add origin URL_DO_REPOSITORIO
 git push -u origin main
 ```
+
+Depois do primeiro push:
+
+1. Abra **Settings → Pages** no repositório.
+2. Em **Build and deployment → Source**, selecione **GitHub Actions**.
+3. Abra **Actions → Atualizar sinais e publicar**.
+4. Clique em **Run workflow** para fazer a primeira publicação.
+
+O endereço será semelhante a:
+
+```text
+https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/
+```
+
+O intervalo mínimo do GitHub Actions é cinco minutos. Execuções agendadas podem
+sofrer atrasos quando a plataforma estiver com muita demanda.
 
 ## Estrutura
 
@@ -135,6 +153,8 @@ server/lib/scanner.mjs    leitura e ranking dos mercados
 server/lib/strategy.mjs   regras dos sinais
 server/lib/indicators.mjs indicadores técnicos
 server/lib/mexc.mjs       somente endpoints públicos
+scripts/generate-static.mjs gera o JSON publicado
+.github/workflows/pages.yml atualiza e publica o site
 test/                     testes
 ```
 
