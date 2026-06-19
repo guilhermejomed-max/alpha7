@@ -1,0 +1,15 @@
+{
+  "name": "mexc-signal-radar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Scanner público de sinais para futuros MEXC, sem chave API e sem execução de ordens.",
+  "scripts": {
+    "start": "node server/index.mjs",
+    "dev": "node --watch server/index.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Radar de sinais para futuros da MEXC usando apenas dados públicos."
+    />
+    <meta name="theme-color" content="#080b12" />
+    <title>MEXC Signal Radar</title>
+    <link rel="stylesheet" href="./styles.css?v=20260619-4" />
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Página inicial do MEXC Signal Radar">
+        <span class="brand-icon" aria-hidden="true">
+          <i></i><i></i><i></i>
+        </span>
+        <span>
+          <strong>Signal Radar</strong>
+          <small>MEXC Futures · dados públicos</small>
+        </span>
+      </a>
+
+      <div class="header-status">
+        <span class="api-status">Sem API key</span>
+        <span id="connectionBadge" class="connection">
+          <i></i>
+          <span>Conectando</span>
+        </span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="kicker"><span>01</span> Scanner quantitativo</p>
+          <h1>Só existe sinal quando <em>tudo</em> concorda.</h1>
+          <p class="hero-description">
+            Tendência, momentum, volatilidade, volume, força relativa e regime do
+            Bitcoin avaliados em conjunto. Sem login. Sem ordem automática.
+          </p>
+
+          <div class="hero-actions">
+            <button id="scanButton" class="scan-button">
+              <span>Atualizar mercado</span>
+              <kbd>↻</kbd>
+            </button>
+            <p>
+              Próxima leitura automática em
+              <strong id="interval">5 minutos</strong>
+            </p>
+          </div>
+        </div>
+
+        <aside class="market-console">
+          <div class="console-top">
+            <span>MARKET STATUS</span>
+            <time id="lastScan">Aguardando leitura</time>
+          </div>
+          <div class="btc-regime">
+            <span class="orbit" aria-hidden="true"><i></i></span>
+            <div>
+              <small>Regime do Bitcoin</small>
+              <strong id="btcRegime">—</strong>
+            </div>
+          </div>
+          <div class="console-signal">
+            <div>
+              <small>Melhor oportunidade agora</small>
+              <strong id="heroSignalSymbol">Aguardando</strong>
+            </div>
+            <div class="console-signal-status">
+              <span id="heroSignalStatus">SEM LEITURA</span>
+              <b id="heroSignalScore">0%</b>
+            </div>
+          </div>
+          <dl class="console-stats">
+            <div>
+              <dt>Timeframes</dt>
+              <dd id="timeframe">—</dd>
+            </div>
+            <div>
+              <dt>Mercados</dt>
+              <dd id="marketCount">0</dd>
+            </div>
+            <div>
+              <dt>Fonte</dt>
+              <dd>MEXC Public</dd>
+            </div>
+          </dl>
+          <p id="newsNote" class="news-note">Verificando contexto de notícias…</p>
+        </aside>
+      </section>
+
+      <section class="overview" aria-label="Resumo dos sinais">
+        <article>
+          <span class="overview-index">A</span>
+          <div>
+            <small>Sinais confirmados</small>
+            <strong id="validSignals">0</strong>
+          </div>
+        </article>
+        <article>
+          <span class="overview-index long">L</span>
+          <div>
+            <small>Compras</small>
+            <strong id="longSignals">0</strong>
+          </div>
+        </article>
+        <article>
+          <span class="overview-index short">S</span>
+          <div>
+            <small>Vendas</small>
+            <strong id="shortSignals">0</strong>
+          </div>
+        </article>
+        <article class="best-overview">
+          <div>
+            <small>Ativo mais próximo</small>
+            <strong id="bestSymbol">Aguardando</strong>
+          </div>
+          <span id="bestScore">0%</span>
+        </article>
+      </section>
+
+      <section class="section active-section">
+        <div class="section-title">
+          <div>
+            <p class="kicker"><span>02</span> Execução manual</p>
+            <h2>Sinais e setups armados</h2>
+          </div>
+          <span id="activeBadge" class="section-badge">Nenhuma agora</span>
+        </div>
+        <div id="activeSignals" class="active-signals"></div>
+      </section>
+
+      <section class="section candidate-section">
+        <div class="candidate-copy">
+          <p class="kicker"><span>03</span> Próximo da confirmação</p>
+          <h2 id="candidateSymbol">—</h2>
+          <p id="candidateDescription">
+            O radar está procurando o ativo com maior alinhamento técnico.
+          </p>
+        </div>
+        <div class="candidate-score">
+          <div class="score-ring" id="candidateRing">
+            <span id="candidateScore">0%</span>
+          </div>
+          <small>qualidade atual</small>
+        </div>
+        <dl class="candidate-levels">
+          <div><dt>Viés</dt><dd id="candidateBias">—</dd></div>
+          <div><dt>Entrada observada</dt><dd id="candidateEntry">—</dd></div>
+          <div><dt>Stop ATR</dt><dd id="candidateStop">—</dd></div>
+          <div><dt>Bloqueio principal</dt><dd id="candidateBlock">—</dd></div>
+        </dl>
+      </section>
+
+      <section class="data-grid">
+        <article class="market-table-panel">
+          <div class="section-title compact">
+            <div>
+              <p class="kicker"><span>04</span> Universo monitorado</p>
+              <h2>Leitura dos mercados</h2>
+            </div>
+            <span class="table-hint">Ordenado por qualidade</span>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Ativo</th>
+                  <th>Viés</th>
+                  <th>Qualidade</th>
+                  <th>ADX</th>
+                  <th>RSI</th>
+                  <th>EMA slope</th>
+                  <th>Volume</th>
+                  <th>Rank</th>
+                  <th>O que falta</th>
+                </tr>
+              </thead>
+              <tbody id="signalsTable">
+                <tr><td colspan="9" class="empty">Carregando mercados…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <aside class="relative-panel">
+          <div class="section-title compact">
+            <div>
+              <p class="kicker"><span>05</span> Momentum</p>
+              <h2>Força relativa</h2>
+            </div>
+          </div>
+          <div id="rankingList" class="ranking-list">
+            <p class="empty">Aguardando leitura…</p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="section rules-section">
+        <div class="section-title">
+          <div>
+            <p class="kicker"><span>06</span> Checklist</p>
+            <h2>Condições do melhor ativo</h2>
+          </div>
+          <p>Verde significa aprovado. Cinza ainda bloqueia a entrada.</p>
+        </div>
+        <div id="rulesList" class="rules-grid"></div>
+      </section>
+    </main>
+
+    <footer>
+      <span>MEXC SIGNAL RADAR / 2026</span>
+      <p>
+        Ferramenta informativa. Sinais técnicos não garantem resultado e não
+        substituem sua gestão de risco.
+      </p>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="./app.js?v=20260619-4"></script>
+  </body>
+</html>
